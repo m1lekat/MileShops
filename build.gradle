@@ -26,14 +26,14 @@ allprojects {
             url = 'https://repo.papermc.io/repository/maven-public/'
         }
         maven {
-            url = uri("https://maven.pkg.github.com/tutur1004/MilekatUtils")
+            url = uri("https://maven.pkg.github.com/m1lekat/MilekatUtils")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
                 password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
             }
         }
         maven {
-            url = uri("https://maven.pkg.github.com/tutur1004/MileNpc")
+            url = uri("https://maven.pkg.github.com/m1lekat/MileNpc")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
                 password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
@@ -57,7 +57,7 @@ allprojects {
     }
 
     ext {
-        githubOwner = 'tutur1004'
+        githubOwner = 'm1lekat'
         repository = 'MileShops'
     }
 }

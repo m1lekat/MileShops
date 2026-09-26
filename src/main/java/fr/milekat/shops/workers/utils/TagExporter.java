@@ -15,11 +15,28 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Exports the server's item tags to an {@code item-tags.json} file.
+ * <p>
+ * The JSON is grouped by tag namespace (family), then by tag name, each mapping to a sorted
+ * array of {@link Material} names.
+ */
 public final class TagExporter {
+    /**
+     * Runs {@link #exportItemTags(File)} on an asynchronous Bukkit task.
+     *
+     * @param dataFolder folder in which {@code item-tags.json} is written
+     */
     public static void asyncExportItemTags(@NotNull File dataFolder) {
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> exportItemTags(dataFolder));
     }
 
+    /**
+     * Writes all item tags to {@code item-tags.json} in the given folder, creating it if needed.
+     * I/O errors are logged as warnings rather than thrown.
+     *
+     * @param dataFolder folder in which {@code item-tags.json} is written
+     */
     public static void exportItemTags(@NotNull File dataFolder) {
         JSONObject families = new JSONObject();
         int tagCount = 0;

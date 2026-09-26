@@ -86,7 +86,6 @@ public class ESStorage implements StorageImplementation {
             Main.getMileLogger().debug("Check indices...");
             for (String index : List.of(INDEX_TRADES, INDEX_SHOPS, INDEX_USER_MODES)) {
                 //  Check if index exist, otherwise create it
-                //  TODO - 2026/07/24 : Issue here, mapping not fully created for logs
                 if (!esClient
                         .indices()
                         .exists(ExistsRequest.of(builder -> builder.index(index)))

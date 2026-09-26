@@ -15,6 +15,8 @@ tasks.withType(Javadoc).configureEach {
     options.tags = [ "apiNote", "implNote", "implSpec" ]
 }
 
+def githubUrl = "https://github.com/${githubOwner}/${githubRepository}"
+
 publishing {
     publications {
         maven(MavenPublication) {
@@ -22,29 +24,29 @@ publishing {
             from components.java
 
             pom {
-                name = 'MileShopsAPI'
-                description = 'API for MileShops plugin'
-                url = 'https://github.com/tutur1004/MileShops'
+                name = "${rootProject.name}API"
+                description = "API for ${rootProject.name} plugin"
+                url = githubUrl
 
                 licenses {
                     license {
-                        name = 'MIT License'
-                        url = 'https://opensource.org/licenses/MIT'
+                        name = findProperty('license')
+                        url = findProperty('licenseUrl')
                     }
                 }
 
                 developers {
                     developer {
-                        id = 'milekat'
-                        name = 'arthur'
-                        email = 'arthur@milekat.fr'
+                        id = findProperty('authorId')
+                        name = findProperty('authorName')
+                        email = findProperty('authorEmail')
                     }
                 }
 
                 scm {
-                    connection = 'scm:git:git://github.com/tutur1004/MileShops.git'
-                    developerConnection = 'scm:git:ssh://github.com/tutur1004/MileShops.git'
-                    url = 'https://github.com/tutur1004/MileShops'
+                    connection = "scm:git:git://github.com/${githubOwner}/${githubRepository}.git"
+                    developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepository}.git"
+                    url = githubUrl
                 }
             }
         }
@@ -53,7 +55,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/${githubOwner}/${repository}")
+            url = uri("https://maven.pkg.github.com/${githubOwner}/${githubRepository}")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
                 password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")

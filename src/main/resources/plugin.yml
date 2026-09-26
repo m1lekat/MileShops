@@ -1,20 +1,20 @@
-name: MileShops
-author: MileKat
-main: fr.milekat.shops.Main
+name: ${pluginName}
+author: ${pluginAuthor}
+main: ${pluginMain}
 version: ${pluginVersion}
-api-version: '1.21'
-description: "API/Plugin to create trading shops"
-website: https://github.com/m1lekat/MileShops
+api-version: '${pluginApiVersion}'
+description: "${pluginDescription}"
+website: https://github.com/${githubOwner}/${githubRepository}
 softdepend:
   - MileNpc
   - MileBanks
 libraries:
   # Utils
-  - fr.milekat:milekat-utils:1.10.3
-  - com.fasterxml.jackson.core:jackson-databind:2.22.3
-  - com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.3
+  - fr.milekat:milekat-utils:${milekatUtilsVersion}
+  - com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}
+  - com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}
   # Storage
-  - co.elastic.clients:elasticsearch-java:9.5.4
+  - co.elastic.clients:elasticsearch-java:${elasticsearchVersion}
 commands:
   shop:
     description: "Command to manage shops"

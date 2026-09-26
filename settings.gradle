@@ -1,2 +1,43 @@
-rootProject.name = 'MileShops'
+rootProject.name = providers.gradleProperty('projectName').get()
 include 'mile-shops-api'
+
+// Centralized dependency versions, used as libs.* in build scripts
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            // Versions
+            version('paper', '26.2.build.129-stable')
+            version('jetbrainsAnnotations', '26.1.0')
+            version('shadow', '9.6.1')
+            version('jackson', '2.22.3')
+            version('mileNpc', '1.2.1')
+            version('mileBanks', '1.5.2')
+            version('milekatUtils', '1.10.3')
+            version('fastinv', '3.1.2')
+            version('hikari', '7.1.0')
+            version('mysql', '26.7.0')
+            version('mariadb', '3.5.10')
+            version('postgresql', '42.7.13')
+            version('elasticsearch', '9.5.4')
+
+            // Plugins
+            plugin('shadow', 'com.gradleup.shadow').versionRef('shadow')
+
+            // Libraries
+            library('jetbrains-annotations', 'org.jetbrains', 'annotations').versionRef('jetbrainsAnnotations')
+            library('paper-api', 'io.papermc.paper', 'paper-api').versionRef('paper')
+            library('mile-npc-api', 'fr.milekat', 'mile-npc-api').versionRef('mileNpc')
+            library('mile-banks-api', 'fr.milekat', 'mile-banks-api').versionRef('mileBanks')
+            library('milekat-utils', 'fr.milekat', 'milekat-utils').versionRef('milekatUtils')
+            library('fastinv', 'fr.mrmicky', 'fastinv').versionRef('fastinv')
+            library('hikaricp', 'com.zaxxer', 'HikariCP').versionRef('hikari')
+            library('mysql-connector', 'com.mysql', 'mysql-connector-j').versionRef('mysql')
+            library('mariadb-client', 'org.mariadb.jdbc', 'mariadb-java-client').versionRef('mariadb')
+            library('postgresql', 'org.postgresql', 'postgresql').versionRef('postgresql')
+            library('jackson-core', 'com.fasterxml.jackson.core', 'jackson-core').versionRef('jackson')
+            library('jackson-databind', 'com.fasterxml.jackson.core', 'jackson-databind').versionRef('jackson')
+            library('jackson-yaml', 'com.fasterxml.jackson.dataformat', 'jackson-dataformat-yaml').versionRef('jackson')
+            library('elasticsearch-java', 'co.elastic.clients', 'elasticsearch-java').versionRef('elasticsearch')
+        }
+    }
+}

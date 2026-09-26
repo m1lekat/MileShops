@@ -27,6 +27,14 @@ storage:
     enabled: true
     # Cache time in seconds (Recommended 300s = 5min)
     time: 300
+    # Per-tag trade usage counts (Trade.maxTradeUses). Reduces DB load on every trade-limit
+    # check by caching counts per (shop, position, tag, value). Disable when player-tags are
+    # shared across multiple servers — an external write would be invisible until TTL expires.
+    trade-uses:
+      # Disable if you need a perfect sync between servers
+      enable: true
+      # Cache time in seconds. Defaults to `storage.cache.time` when omitted.
+      time: 60
 
 # Shop settings
 settings:
@@ -37,6 +45,11 @@ settings:
   #   SHULKER             |=>  Trade items from player inventory and Shulkers
   #   END_SHULKER         |=>  Trade items from player inventory, EnderChest and Shulkers
   default-trade-mode: "INVENTORY"
+  # Font style for messages
+  # Available styles:
+  #   default     |=>  Minecraft default font
+  #   equinox     |=>  A clean and modern font from Equinox resource pack
+  font-style: "default"
 
 # Messages
 messages:
@@ -113,6 +126,7 @@ messages:
         no-item: "&cNot enough items"
         no-trade: "&cYou don't have the required items to trade, or your inventory is full"
         max-trade: "&cYou have reached the maximum number of uses for this trade (<trade_limit>)."
+        trade-locked: "&cThis trade is temporarily locked, please retry in a moment."
         trade-processing: "&cA trade is already being processed, please wait..."
         trade-result: "&2You trade <first_total_amount>x<first_material>, for <result_total_amount>x<result_material>."
         trade-result-hover:

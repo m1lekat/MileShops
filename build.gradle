@@ -1,13 +1,12 @@
 plugins {
     id 'java'
-    id 'com.gradleup.shadow' version '9.2.0'
+    alias(libs.plugins.shadow)
 }
 
 allprojects {
     apply plugin: 'java'
 
-    group = 'fr.milekat'
-    version = '1.4.0'
+    // group & version come from gradle.properties
 
     repositories {
         mavenCentral()
@@ -26,14 +25,14 @@ allprojects {
             url = 'https://repo.papermc.io/repository/maven-public/'
         }
         maven {
-            url = uri("https://maven.pkg.github.com/tutur1004/MilekatUtils")
+            url = uri("https://maven.pkg.github.com/m1lekat/MilekatUtils")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
                 password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
             }
         }
         maven {
-            url = uri("https://maven.pkg.github.com/tutur1004/MileNpc")
+            url = uri("https://maven.pkg.github.com/m1lekat/MileNpc")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
                 password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
@@ -44,21 +43,32 @@ allprojects {
 
     dependencies {
         //  Annotation
-        compileOnly group: 'org.jetbrains', name: 'annotations', version: '24.0.1'
+        compileOnly libs.jetbrains.annotations
 
         //  Minecraft
-        compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
+        compileOnly libs.paper.api
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.release = (project.findProperty('javaVersion') as String).toInteger()
     }
 
     processResources {
         filesMatching('plugin.yml') {
-            expand 'pluginVersion': project.version
+            expand(
+                    'pluginName'          : rootProject.name,
+                    'pluginVersion'       : project.version,
+                    'pluginAuthor'        : project.findProperty('pluginAuthor'),
+                    'pluginMain'          : project.findProperty('mainClass'),
+                    'pluginApiVersion'    : project.findProperty('apiVersion'),
+                    'pluginDescription'   : project.findProperty('projectDescription'),
+                    'githubOwner'         : project.findProperty('githubOwner'),
+                    'githubRepository'    : project.findProperty('githubRepository'),
+                    'milekatUtilsVersion' : libs.versions.milekatUtils.get(),
+                    'jacksonVersion'      : libs.versions.jackson.get(),
+                    'elasticsearchVersion': libs.versions.elasticsearch.get()
+            )
         }
-    }
-
-    ext {
-        githubOwner = 'tutur1004'
-        repository = 'MileShops'
     }
 }
 
@@ -80,21 +90,21 @@ dependencies {
     implementation project('mile-shops-api')
 
     //  Milekat
-    compileOnly group: 'fr.milekat', name: 'mile-npc-api', version: '1.2.1'
-    compileOnly group: 'fr.milekat', name: 'mile-banks-api', version: '1.5.1'
+    compileOnly libs.mile.npc.api
+    compileOnly libs.mile.banks.api
 
     //  Utils
-    compileOnly group: 'fr.milekat', name: 'milekat-utils', version: '1.9.1'
-    implementation group: 'fr.mrmicky', name: 'fastinv', version: '3.1.2'
+    compileOnly libs.milekat.utils
+    implementation libs.fastinv
 
     //  Storage clients
-    compileOnly group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
-    compileOnly group: 'mysql', name: 'mysql-connector-java', version: '8.0.33'
-    compileOnly group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '3.1.2'
-    compileOnly group: 'org.postgresql', name: 'postgresql', version: '42.5.4'
+    compileOnly libs.hikaricp
+    compileOnly libs.mysql.connector
+    compileOnly libs.mariadb.client
+    compileOnly libs.postgresql
 
-    compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.18.3'
-    compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.18.3'
-    compileOnly group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.18.3'
-    compileOnly group: 'co.elastic.clients', name: 'elasticsearch-java', version: '9.1.4'
+    compileOnly libs.jackson.core
+    compileOnly libs.jackson.databind
+    compileOnly libs.jackson.yaml
+    compileOnly libs.elasticsearch.java
 }

@@ -16,10 +16,15 @@ import java.util.Map;
  *         "shopUuid": UUID,
  *         "position": Location,
  *         "firstItem": ItemStack,
+ *         "firstItemTag": String,
  *         "resultItem": ItemStack,
  *         "secondItem": ItemStack,
- *         "maxTradeUse": int,
- *         "maxTradeTagsNames": String[],
+ *         "secondItemTag": String,
+ *         "maxTradeUses": {
+ *             "tagA": int,
+ *             "tagB": int,
+ *             ...
+ *         },
  *         "moneyResult": {
  *             "moneyA": int,
  *             "moneyB": int,
@@ -46,19 +51,24 @@ public class TradeSerializer extends StdSerializer<Trade> {
         gen.writeNumberField("position", value.getTradePosition());
         gen.writeFieldName("firstItem");
         gen.writeObject(value.getFirstItem());
+        if (value.getFirstItemTag() != null) {
+            gen.writeStringField("firstItemTag", value.getFirstItemTag().getKey().toString());
+        }
         if (value.getSecondItem() != null) {
             gen.writeFieldName("secondItem");
             gen.writeObject(value.getSecondItem());
+            if (value.getSecondItemTag() != null) {
+                gen.writeStringField("secondItemTag", value.getSecondItemTag().getKey().toString());
+            }
         }
         gen.writeFieldName("resultItem");
         gen.writeObject(value.getResultItem());
         if (value.isUsageLimited()) {
-            gen.writeNumberField("maxTradeUse", value.getMaxTradeUse());
-            gen.writeArrayFieldStart("maxTradeTagsNames");
-            for (String tag : value.getMaxTradeTagsNames()) {
-                gen.writeString(tag);
+            gen.writeObjectFieldStart("maxTradeUses");
+            for (Map.Entry<String, Integer> e : value.getMaxTradeUses().entrySet()) {
+                gen.writeNumberField(e.getKey(), e.getValue());
             }
-            gen.writeEndArray();
+            gen.writeEndObject();
         }
         if (value.isMoneyTrade()) {
             gen.writeObjectFieldStart("moneyResult");

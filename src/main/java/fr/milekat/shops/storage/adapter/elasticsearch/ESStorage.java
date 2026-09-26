@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
@@ -96,7 +97,7 @@ public class ESStorage implements StorageImplementation {
                 }
             }
             new Index(esClient, INDEX_TRADE_LOGS, numberOfReplicas,
-                    trade_logs_fields, Main.TAGS, "tags");
+                    trade_logs_fields, Main.TAGS, "tags", false);
             Main.getMileLogger().debug("Storage is ready.");
             return true;
         } catch (StorageLoadException | IOException exception) {
@@ -509,8 +510,23 @@ public class ESStorage implements StorageImplementation {
             logToProcess.clear();
             if (!processing.isEmpty()) {
                 try (ElasticsearchClient esClient = connection.getEsClient(getMapper())) {
-                    esClient.bulk(new BulkRequest.Builder().operations(processing).build());
-                    Main.getMileLogger().debug("'" + processing.size() + "' log trades saved.");
+                    BulkResponse response = esClient.bulk(
+                            new BulkRequest.Builder()
+                                    .operations(processing)
+                                    .build()
+                    );
+
+                    if (response.errors()) {
+                        for (BulkResponseItem item : response.items()) {
+                            if (item.error() != null) {
+                                Main.getMileLogger().warning(
+                                        "Bulk error: " + item.error().reason()
+                                );
+                            }
+                        }
+                    } else {
+                        Main.getMileLogger().debug("'" + response.items().size() + "' log trades saved.");
+                    }
                 } catch (ElasticsearchException | IOException exception) {
                     logToProcess.addAll(processing);
                     Main.getMileLogger().warning("Error while trying to save Trade Logs.");

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import fr.milekat.milenpc.api.classes.NPC;
 import fr.milekat.shops.api.classes.ShopNpc;
 import org.jetbrains.annotations.NotNull;
 

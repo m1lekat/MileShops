@@ -7,6 +7,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 
 public class MileBanks {
@@ -25,6 +26,10 @@ public class MileBanks {
 
         loadedBankApi = provider.getProvider();
         return loadedBankApi;
+    }
+
+    public static @NotNull List<String> getCurrencies() {
+        return getBankApi().getCurrencies();
     }
 
     public static void addMoneyByTags(@NotNull Map<String, Object> tags, int amount,

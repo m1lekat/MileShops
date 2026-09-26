@@ -5,6 +5,10 @@ import fr.milekat.shops.api.classes.Shop;
 import fr.milekat.shops.api.classes.Trade;
 import fr.milekat.shops.storage.utils.PlayerTradeMode;
 import fr.milekat.shops.storage.utils.ShopTrades;
+import fr.milekat.shops.storage.utils.TradePlayerLock;
+import fr.milekat.shops.storage.utils.TradeTagLock;
+import fr.milekat.shops.storage.utils.TradeUsesEntry;
+import fr.milekat.shops.storage.utils.TradeUsesKey;
 import fr.milekat.shops.api.classes.TradeMode;
 import fr.milekat.utils.storage.exceptions.StorageExecuteException;
 import org.jetbrains.annotations.NotNull;
@@ -174,5 +178,112 @@ public interface CacheManager {
             Main.getMileLogger().debug("Trades mode for player '" + playerUuid + "' not found in cache, try to search them.");
             return Main.getStorage().getTradeMode(playerUuid);
         }
+    }
+
+    /**
+     * Cache-aware variant of {@link StorageImplementation#getTradeUses(Map, Trade)}
+     * used by the trade-limit check. Falls back to a direct storage call when:
+     * <ul>
+     *   <li>{@link Main#TRADE_USES_DELAY} is {@code 0} (cache disabled by config), or</li>
+     *   <li>{@code tags} doesn't contain exactly one entry — we only cache per-single-tag
+     *       lookups, since limits are checked tag-by-tag.</li>
+     * </ul>
+     *
+     * <p>On cache hit, returns the cached count without touching storage. On miss or
+     * expired entry, performs the storage call and stores the fresh result.</p>
+     */
+    default int getCacheTradeUses(@NotNull Map<String, Object> tags,
+                                  @NotNull Trade trade) {
+        if (Main.TRADE_USES_DELAY <= 0 || tags.size() != 1) {
+            return Main.getStorage().getTradeUses(tags, trade);
+        }
+        Map.Entry<String, Object> e = tags.entrySet().iterator().next();
+        TradeUsesKey key = new TradeUsesKey(trade.getShopUuid(), trade.getTradePosition(),
+                e.getKey(), e.getValue());
+        TradeUsesEntry entry = Main.TRADE_USES_CACHE.get(key);
+        if (entry != null
+                && entry.fetchedAt().getTime() + Main.TRADE_USES_DELAY > System.currentTimeMillis()) {
+            Main.getMileLogger().debug("[Cache] trade-uses hit '" + key + "' = " + entry.count());
+            return entry.count();
+        }
+        int count = Main.getStorage().getTradeUses(tags, trade);
+        Main.TRADE_USES_CACHE.put(key, new TradeUsesEntry(count, new Date()));
+        return count;
+    }
+
+    /**
+     * Drops the cache entry for a specific {@code (shop, position, tag, value)} tuple
+     * so the next lookup re-fetches from storage. Useful for external plugins that have
+     * mutated the underlying count out-of-band.
+     */
+    static void invalidateTradeUses(@NotNull UUID shopUuid, int position,
+                                    @NotNull String tagName, @NotNull Object tagValue) {
+        Main.TRADE_USES_CACHE.remove(new TradeUsesKey(shopUuid, position, tagName, tagValue));
+    }
+
+    /**
+     * Increments the cached count for {@code (shop, position, tag, value)} by {@code delta}
+     * if an entry exists. Used right after a successful trade is logged so the next
+     * lookup doesn't have to re-hit storage. No-op when no entry is cached — we don't
+     * pre-create an entry from a partial increment because the base count is unknown.
+     */
+    static void bumpTradeUses(@NotNull UUID shopUuid, int position,
+                              @NotNull String tagName, @NotNull Object tagValue, int delta) {
+        Main.TRADE_USES_CACHE.computeIfPresent(
+                new TradeUsesKey(shopUuid, position, tagName, tagValue),
+                (k, e) -> new TradeUsesEntry(e.count() + delta, e.fetchedAt())
+        );
+    }
+
+    // =========================================================================
+    //  Trade locks — warm-up (per-player) + API (per-tag-value)
+    // =========================================================================
+
+    /** Acquire a warm-up lock blocking this single player from this trade. */
+    static void lockWarmup(@NotNull UUID shopUuid, int position, @NotNull UUID playerUuid) {
+        Main.TRADE_WARMUP_LOCKS.add(new TradePlayerLock(shopUuid, position, playerUuid));
+    }
+
+    /** Release the warm-up lock for this player + trade. */
+    static void unlockWarmup(@NotNull UUID shopUuid, int position, @NotNull UUID playerUuid) {
+        Main.TRADE_WARMUP_LOCKS.remove(new TradePlayerLock(shopUuid, position, playerUuid));
+    }
+
+    /** Acquire a per-tag-value API lock; any player carrying {@code (tagName, tagValue)} is blocked. */
+    static void lockTrade(@NotNull UUID shopUuid, int position,
+                          @NotNull String tagName, @NotNull Object tagValue) {
+        Main.TRADE_API_LOCKS.add(new TradeTagLock(shopUuid, position, tagName, tagValue));
+    }
+
+    /**
+     * Release a per-tag-value API lock and drop the matching trade-uses cache entry so
+     * the next limit check re-fetches from storage. The invalidation is unconditional:
+     * a plugin generally locks because it is mutating the underlying counter, so the
+     * cached value can no longer be trusted once the lock is released.
+     */
+    static void unlockTrade(@NotNull UUID shopUuid, int position,
+                            @NotNull String tagName, @NotNull Object tagValue) {
+        Main.TRADE_API_LOCKS.remove(new TradeTagLock(shopUuid, position, tagName, tagValue));
+        invalidateTradeUses(shopUuid, position, tagName, tagValue);
+    }
+
+    /**
+     * True if any active lock — warm-up for this player, or API lock matching one of the
+     * player's tag values — blocks this trade for this player.
+     */
+    static boolean isTradeLockedForPlayer(@NotNull UUID shopUuid, int position,
+                                          @NotNull UUID playerUuid,
+                                          @NotNull Map<String, Object> playerTags) {
+        if (Main.TRADE_WARMUP_LOCKS.contains(new TradePlayerLock(shopUuid, position, playerUuid))) {
+            return true;
+        }
+        if (Main.TRADE_API_LOCKS.isEmpty()) return false;
+        for (Map.Entry<String, Object> e : playerTags.entrySet()) {
+            if (Main.TRADE_API_LOCKS.contains(
+                    new TradeTagLock(shopUuid, position, e.getKey(), e.getValue()))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

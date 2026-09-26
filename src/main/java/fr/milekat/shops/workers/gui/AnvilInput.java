@@ -51,7 +51,11 @@ public class AnvilInput implements Listener {
 
         view.open();
 
-        //  TODO: Ensure inventory is well opened
+        if (player.getOpenInventory().getTopInventory().getType() != InventoryType.ANVIL) {
+            consumed = true;
+            callback.accept(null);
+            return;
+        }
 
         Bukkit.getPluginManager().registerEvents(this, Main.getInstance());
     }

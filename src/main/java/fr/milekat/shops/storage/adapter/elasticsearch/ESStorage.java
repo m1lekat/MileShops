@@ -98,7 +98,7 @@ public class ESStorage implements StorageImplementation {
                 }
             }
             new Index(esClient, INDEX_TRADE_LOGS, numberOfReplicas,
-                    trade_logs_fields, Main.TAGS, "tags");
+                    trade_logs_fields, Main.TAGS, "tags", false);
             Main.getMileLogger().debug("Storage is ready.");
             return true;
         } catch (StorageLoadException | IOException exception) {
